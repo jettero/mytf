@@ -1,1 +1,4 @@
+tensorflow
+pandas
+numpy
 seaborn

@@ -4,6 +4,7 @@
 import os
 import re
 import logging
+import warnings
 
 APPLICABLE_LOGGERS = {'tensorflow', 'tensorboard', 'h5py'}
 
@@ -43,6 +44,11 @@ def stfu_tensorflow(*patterns):
         patterns = tuple(unique_patterns(patterns))
 
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" # this doesn't help as much as you'd hope
+
+    # This applies more to numpy than anything else tf.dtypes use np.bool8
+    # (still), which is deprecated, but I can't do anything about it so the
+    # warning is more than useless to me; it's pure annoyance
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     try:
         from tensorflow.python.util import deprecation
