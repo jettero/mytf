@@ -4,7 +4,7 @@
 import tensorflow as tf
 
 @tf.function
-def string_to_tf_bits(x, encoding='UTF-8'):
+def strings_to_bits(x, encoding='UTF-8', depth=8, dtype=tf.int32):
     """
     convert a single string to bits
 
@@ -30,8 +30,34 @@ def string_to_tf_bits(x, encoding='UTF-8'):
                                       [1, 1, 0, 0, 1, 1, 1, 0],
                                       [0, 0, 1, 0, 1, 1, 1, 0]]]>
     """
-    d = tf.strings.unicode_decode(x, encoding)
-    m = tf.bitwise.left_shift(tf.ones([], dtype=d.dtype), tf.range(8, dtype=d.dtype))
-    M = tf.bitwise.bitwise_and(tf.expand_dims(d, -1), m)
-    b = tf.cast(tf.not_equal(M, 0), tf.int32)
-    return b
+    x = tf.strings.unicode_decode(x, encoding)
+    m = tf.bitwise.left_shift(tf.ones([], dtype=tf.int32), tf.range(depth, dtype=tf.int32))
+    x = tf.bitwise.bitwise_and(tf.expand_dims(x, -1), m)
+    x = tf.cast(tf.not_equal(x, 0), dtype)
+    return x
+
+@tf.function
+def fuzzy_bits_to_bytes(x, encoding='UTF-8', depth=8):
+    """
+    recode fuzzy output bits into strings of bytes (not python strings)
+
+        In [1]: fuzzy_bits_to_bytes(strings_to_bits('supz'))
+        Out[1]: b'supz'
+    """
+    x = tf.round(x)
+    x = tf.cast(x, tf.int32)
+    x = tf.maximum(x, 0)
+    x = tf.minimum(x, 1)
+    x *= tf.bitwise.left_shift(tf.ones([], dtype=tf.int32), tf.range(depth, dtype=tf.int32))
+    x = tf.reduce_sum(x, axis=-1)
+    x = tf.strings.unicode_encode(x, encoding)
+    return x
+
+def stringify_bytes(x, encoding='UTF-8', depth=8):
+    """
+    Go all the way back to actual strings (not bytes). This is not decorated as
+    a TF function. It's probably only useful for printing to humans.
+    """
+    if x.dtype != tf.string:
+        x = fuzzy_bits_to_bytes(x)
+    return x.numpy().decode(encoding)
