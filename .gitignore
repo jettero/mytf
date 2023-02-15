@@ -6,3 +6,4 @@ dist
 *.whl
 /tf_imp/version.py
 /build
+file*
