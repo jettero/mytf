@@ -6,10 +6,11 @@ import re
 import logging
 import warnings
 
-APPLICABLE_LOGGERS = {'tensorflow', 'tensorboard', 'h5py'}
+APPLICABLE_LOGGERS = {'tensorflow', 'tensorboard', 'h5py', 'numpy'}
 
 DEFAULT_PATTERNS = (
     'is slow compared to the',
+    'np.bool8',
 )
 
 def relevant_package(x):

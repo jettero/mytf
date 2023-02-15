@@ -4,6 +4,10 @@
 import tensorflow as tf
 
 @tf.function
+def bytes_to_bits(x):
+    return strings_to_bits(encoding=None)
+
+@tf.function
 def strings_to_bits(x, encoding='UTF-8', depth=8, dtype=tf.int32):
     """
     convert a single string to bits
@@ -30,7 +34,8 @@ def strings_to_bits(x, encoding='UTF-8', depth=8, dtype=tf.int32):
                                       [1, 1, 0, 0, 1, 1, 1, 0],
                                       [0, 0, 1, 0, 1, 1, 1, 0]]]>
     """
-    x = tf.strings.unicode_decode(x, encoding)
+    if encoding is not None:
+        x = tf.strings.unicode_decode(x, encoding)
     m = tf.bitwise.left_shift(tf.ones([], dtype=tf.int32), tf.range(depth, dtype=tf.int32))
     x = tf.bitwise.bitwise_and(tf.expand_dims(x, -1), m)
     x = tf.cast(tf.not_equal(x, 0), dtype)
@@ -60,4 +65,5 @@ def stringify_bytes(x, encoding='UTF-8', depth=8):
     """
     if x.dtype != tf.string:
         x = fuzzy_bits_to_bytes(x)
-    return x.numpy().decode(encoding)
+    x = x.numpy()
+    return x.decode(encoding) if isinstance(x, (bytes,)) else [ y.decode() for y in x ]
