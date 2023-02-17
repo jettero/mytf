@@ -1,0 +1,20 @@
+# vim:ft=python:
+
+import tf_imp as tfi
+
+def _s(x):
+    try:
+        lhs = x.to_tensor().shape
+        rhs = x.shape
+        return tuple( l*1j if r is None else l for l,r in zip(lhs, rhs) )
+
+    except:
+        pass
+
+    return tuple( x.shape )
+
+def s(*x):
+    return [ _s(y) for y in x ]
+
+words = 'supz mang how you doin'.split()
+x = bits = tfi.strings_to_bits(words)
