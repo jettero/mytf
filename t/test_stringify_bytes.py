@@ -3,43 +3,59 @@
 
 import pytest
 import tf_imp as tfi
-import hashlib
 
 @pytest.fixture
 def x_data():
-    yield "string"
-    yield b'test bytes'
-    yield list( "list of strings".split() )
-    yield list( b'list of bytes'.split() )
+    return [
+        list( "list of strings".split() ),
+        list( b'list of bytes'.split() ),
+    ]
 
 @pytest.fixture
-def y_debitsed(x_data):
-    yield b"string"
-    yield b'test bytes'
-    yield list( b"list of strings".split() )
-    yield list( b'list of bytes'.split() )
+def y_debitsed():
+    return [
+        list( b"list of strings".split() ),
+        list( b'list of bytes'.split() ),
+    ]
 
 @pytest.fixture
-def y_stringified(x_data):
-    yield "string"
-    yield 'test bytes'
-    yield list( "list of strings".split() )
-    yield list( 'list of bytes'.split() )
+def y_stringified():
+    return [
+        list( "list of strings".split() ),
+        list( "list of bytes".split() ),
+    ]
 
-# def test_strings_to_bits_to_bytes(x_data, y_debitsed):
-#     for lhs,rhs in zip(x_data, y_debitsed):
-#         b = tfi.strings_to_bits(lhs)
-#         B = tfi.fuzzy_bits_to_bytes(b)
+def test_fixtures_work(x_data, y_debitsed, y_stringified):
+    assert len(x_data) == len(y_debitsed)
+    assert len(y_debitsed) == len(y_stringified)
 
-#         assert B == rhs
+def test_strings_to_bits(x_data):
+    bits = tfi.strings_to_bits('supz')
+    assert tuple(bits.shape) == (4,8)
 
-# def test_strings_to_bits_to_strings(x_data, y_stringified):
-#     for lhs,rhs in zip(x_data, y_debitsed):
-#         b = tfi.strings_to_bits(lhs)
-#         B = tfi.fuzzy_bits_to_bytes(b)
+    bits = tfi.strings_to_bits(['supz', 'mang'])
+    assert tuple(bits.shape) == (2,None,8)
 
-#         sb = tfi.stringify_bytes(b)   
-#         sB = tfi.stringify_bytes(B) 
+    bits = tfi.strings_to_bits(['supz', 'longer'])
+    assert tuple(bits.shape) == (2,None,8)
 
-#         assert sb == rhs
-#         assert sB == rhs
+def test_strings_to_bits_to_bytes(x_data, y_debitsed):
+    for lhs,rhs in zip(x_data, y_debitsed):
+        b = tfi.strings_to_bits(lhs)
+        B = tfi.fuzzy_bits_to_bytes(b)
+
+        # B == rhs is vectorized e.g., tf.array([True, True, True]) ... 
+        # originally we had bool(B == rhs), which crashes, "truth value of an
+        # array with more than one element is ambiguous."
+        assert all(B == rhs)
+
+def test_strings_to_bits_to_strings(x_data, y_stringified):
+    for lhs,rhs in zip(x_data, y_stringified):
+        b = tfi.strings_to_bits(lhs)
+        B = tfi.fuzzy_bits_to_bytes(b)
+
+        sb = tfi.stringify_bytes(b)   
+        sB = tfi.stringify_bytes(B) 
+
+        assert sb == rhs
+        assert sB == rhs
