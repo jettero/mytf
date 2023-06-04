@@ -1,4 +1,10 @@
+# bring in tf
 tensorflow
-pandas
 numpy
+pandas
+
+# add some data vis
 seaborn
+matplotlib
+
+-r egglib/requirements.txt
