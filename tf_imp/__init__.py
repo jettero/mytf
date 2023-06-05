@@ -11,4 +11,4 @@ from .strings import *
 # __init__.py what adds all the eggs to the import path.
 from .egglib import *
 
-from .grid_world import GridWorld, Room, A # A := actions
+from .grid_world import run_check as gw_run_check, GridWorld, Room, A as GWActions
