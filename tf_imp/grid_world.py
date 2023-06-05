@@ -196,7 +196,10 @@ class GridWorld:
             return d/n, n
         return d, 0.0
 
-if __name__ == '__main__':
+def run_check():
     gw = GridWorld()
     print(repr(gw))
     print(gw)
+
+if __name__ == '__main__':
+    run_check();
