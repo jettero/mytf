@@ -6,3 +6,9 @@ from .stfu import stfu_tensorflow
 stfu_tensorflow()
 
 from .strings import *
+
+# there's actually not much to import here mostly we're invoking the egglib
+# __init__.py what adds all the eggs to the import path.
+from .egglib import *
+
+from .grid_world import GridWorld, Room, A # A := actions
