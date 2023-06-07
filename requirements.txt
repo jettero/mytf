@@ -7,7 +7,6 @@ pandas
 seaborn
 matplotlib
 
-
 # for the egglibs
 lark-parser
 pint
