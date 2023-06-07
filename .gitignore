@@ -3,7 +3,6 @@ __pycache__
 /.python-version
 dist
 *.egg-info
-*.whl
 /tf_imp/version.py
 /build
 file*
