@@ -10,3 +10,5 @@ matplotlib
 # for the egglibs
 lark-parser
 pint
+
+./contrib/space-0.0.2-py3-none-any.whl

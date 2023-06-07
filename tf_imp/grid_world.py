@@ -5,7 +5,7 @@ import logging
 import functools
 from collections import namedtuple
 import numpy as np
-from tf_imp.util.misc import terminal_size, write_now
+from .util.misc import terminal_size, write_now
 from space.map import Room, Cell, Wall
 from space.living import Human
 from space.item import Ubi
