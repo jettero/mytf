@@ -7,4 +7,4 @@ pandas
 seaborn
 matplotlib
 
-space @ https://github.com/jettero/space.git
+git+https://github.com/jettero/space.git
