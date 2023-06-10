@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import pytest
-import tf_imp as tfi
+import mytf as tfi
 
 @pytest.fixture
 def x_data():

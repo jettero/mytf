@@ -1,6 +1,6 @@
 # vim:ft=python:
 
-import tf_imp as tfi
+import mytf as tfi
 
 def _s(x):
     try:

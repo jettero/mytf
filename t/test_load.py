@@ -2,6 +2,6 @@
 # coding: utf-8
 
 def test_load():
-    import tf_imp as tfi
+    import mytf as tfi
 
     assert True # parses without crashing
