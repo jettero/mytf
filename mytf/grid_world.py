@@ -22,7 +22,7 @@ CE = namedtuple('CellEncoding', 'null wall goal turtle'.split())(
 )
 
 class Goal(Ubi):
-    a = '★'
+    a = '*'
 
 class Turtle(Human):
     a = '☺'
