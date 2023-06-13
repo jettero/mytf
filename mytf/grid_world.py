@@ -52,15 +52,30 @@ class GridWorld:
         self.s0 = self.s
         self.g0 = self.g
 
+    def shake_the_board(self):
+        while True:
+            self.R.drop_item_randomly(self.T)
+            self.R.drop_item_randomly(self.G)
+            self.s0 = self.s
+            self.g0 = self.g
+            if self.s0 != self.g0:
+                break
+        self.emit_blindness()
+
+    def emit_blindness(self):
+        # This thing isn't a game at all... we use the visibility flag of the
+        # cell to show path information instead of visibility information. This
+        # resets all the cells to be unseen -- at least when we're drawing the
+        # map in ascii.
+        for c in self.R.iter_cells():
+            c.visible = False
+
     def reset(self):
         if self.s != self.s0:
             self.R[self.s0] = self.T
         if self.g != self.g0:
             self.R[self.g0] = self.G
-        # make sure if we abuse .visible to show pathing information
-        # that we clear that back out on reset
-        for c in self.R.iter_cells():
-            c.visible = False
+        self.emit_blindness()
 
     def pos(self, what):
         return self.R.find_obj(what).pos
