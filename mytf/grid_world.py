@@ -12,9 +12,9 @@ from space.item import Ubi
 import space.exceptions as E
 
 log = logging.getLogger(__name__)
-A = tuple('nsew') + tuple('NE SE NW SW'.split())
+Actions = tuple('nsew') + tuple('NE SE NW SW'.split())
 
-CE = namedtuple('CellEncoding', 'null wall goal turtle'.split())(
+CellEncoding = namedtuple('CellEncoding', 'null wall goal turtle'.split())(
     null   = (0,0,0),
     turtle = (0,0,1),
     goal   = (0,1,0),
@@ -155,19 +155,19 @@ class GridWorld:
         dx,dy = tx - sb.x, ty - sb.y
         ax = max(0, self.maxdist - dx)
         ay = max(0, self.maxdist - dy)
-        ret = np.zeros( (mi,mi,len(CE.null)), dtype=np.int32 )
+        ret = np.zeros( (mi,mi,len(CellEncoding.null)), dtype=np.int32 )
         for (x,y), cell in sv:
             x += ax
             y += ay
             if cell is None:
                 continue
             if isinstance(cell, Wall):
-                ret[y,x] = CE.wall
+                ret[y,x] = CellEncoding.wall
             elif isinstance(cell, Cell):
                 if self.G in cell:
-                    ret[y,x] += CE.goal
+                    ret[y,x] += CellEncoding.goal
                 if self.T in cell:
-                    ret[y,x] += CE.turtle
+                    ret[y,x] += CellEncoding.turtle
         return ret
 
     @property

@@ -1,20 +1,4 @@
 # vim:ft=python:
 
 import mytf as tfi
-
-def _s(x):
-    try:
-        lhs = x.to_tensor().shape
-        rhs = x.shape
-        return tuple( l*1j if r is None else l for l,r in zip(lhs, rhs) )
-
-    except:
-        pass
-
-    return tuple( x.shape )
-
-def s(*x):
-    return [ _s(y) for y in x ]
-
-words = 'supz mang how you doin'.split()
-x = bits = tfi.strings_to_bits(words)
+from mytf.grid_world import GridWorld, Room, Goal, Turtle, Actions, CellEncoding
