@@ -2,3 +2,8 @@
 
 import mytf as tfi
 from mytf.grid_world import GridWorld, Room, Goal, Turtle, Actions, CellEncoding
+
+gw = GridWorld()
+
+
+/print gw
