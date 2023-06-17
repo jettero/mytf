@@ -1,9 +1,8 @@
 # vim:ft=python:
 
 import mytf as tfi
-from mytf.grid_world import GridWorld, Room, Goal, Turtle, Actions, CellEncoding
+from mytf.grid_world import GridWorld, Room, Goal, Turtle, Actions, CellEncoding, SuperHardRoom, HardRoom, EasyRoom
 
-gw = GridWorld()
-
+gw = SuperHardRoom()
 
 /print gw
