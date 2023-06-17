@@ -22,7 +22,7 @@ class Turtle(Human):
     def __init__(self):
         super().__init__('Grid World Turtle', 'Turtle')
 
-def encode_map(map, turtle, goal):
+def encode_map(map, turtle, goal, one_hot=True):
     def _inner():
         for (x,y), cell in map:
             if isinstance(cell, Wall):
@@ -38,7 +38,11 @@ def encode_map(map, turtle, goal):
                 yield 0
 
     b = map.bounds
-    return np.array(list(_inner())).reshape( (b.YY, b.XX) )
+    r = np.array(list(_inner()), dtype=np.int32).reshape( (b.YY, b.XX) )
+    if one_hot:
+        r = np.eye(5, dtype=np.int32)[r].transpose(2,0,1)
+        r[2] = np.maximum(r[2], np.maximum(r[3], r[4]))
+    return r
 
 class GridWorld:
     def __init__(self, room=None, maxdist=3):
@@ -155,6 +159,14 @@ class GridWorld:
     @property
     def view(self):
         return self.R.visicalc_submap( self.T, maxdist=self.maxdist )
+
+    @property
+    def tview(self):
+        return self.encode_view()
+
+    @property
+    def tmap(self):
+        return self.encode()
 
     def encode_view(self):
         return encode_map(self.view, self.T, self.G)
