@@ -1,8 +1,9 @@
 # vim:ft=python:
 
-import mytf as tfi
-from mytf.grid_world import GridWorld, Room, Goal, Turtle, Actions, CellEncoding, SuperHardRoom, HardRoom, EasyRoom
+import mytf
 
-gw = SuperHardRoom()
+gw = mytf.grid_world.SuperHardRoom()
+em = gw.encode()
+ev = gw.encode_view()
 
-/print gw
+print("Map (gw):\n", gw)

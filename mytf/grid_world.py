@@ -14,13 +14,6 @@ import space.exceptions as E
 log = logging.getLogger(__name__)
 Actions = tuple('nsew') + tuple('NE SE NW SW'.split())
 
-CellEncoding = namedtuple('CellEncoding', 'null wall goal turtle'.split())(
-    null   = (0,0,0),
-    turtle = (0,0,1),
-    goal   = (0,1,0),
-    wall   = (1,0,0),
-)
-
 class Goal(Ubi):
     a = '*'
 
@@ -28,6 +21,24 @@ class Turtle(Human):
     a = '☺'
     def __init__(self):
         super().__init__('Grid World Turtle', 'Turtle')
+
+def encode_map(map, turtle, goal):
+    def _inner():
+        for (x,y), cell in map:
+            if isinstance(cell, Wall):
+                yield 1
+            elif isinstance(cell, Cell):
+                if turtle in cell:
+                    yield 4
+                elif goal in cell:
+                    yield 3
+                else:
+                    yield 2
+            else:
+                yield 0
+
+    b = map.bounds
+    return np.array(list(_inner())).reshape( (b.YY, b.XX) )
 
 class GridWorld:
     def __init__(self, room=None, maxdist=3):
@@ -145,50 +156,11 @@ class GridWorld:
     def view(self):
         return self.R.visicalc_submap( self.T, maxdist=self.maxdist )
 
+    def encode_view(self):
+        return encode_map(self.view, self.T, self.G)
 
-    @functools.lru_cache(maxsize=1024)
-    def _cachable_matrix_view(self, s, g):
-        mi = self.maxdist * 2 + 1
-        sv = self.view
-        sb = self.view.bounds
-        tx,ty = sv[ self.T ].pos
-        dx,dy = tx - sb.x, ty - sb.y
-        ax = max(0, self.maxdist - dx)
-        ay = max(0, self.maxdist - dy)
-        ret = np.zeros( (mi,mi,len(CellEncoding.null)), dtype=np.int32 )
-        for (x,y), cell in sv:
-            x += ax
-            y += ay
-            if cell is None:
-                continue
-            if isinstance(cell, Wall):
-                ret[y,x] = CellEncoding.wall
-            elif isinstance(cell, Cell):
-                if self.G in cell:
-                    ret[y,x] += CellEncoding.goal
-                if self.T in cell:
-                    ret[y,x] += CellEncoding.turtle
-        return ret
-
-    @property
-    def matrix_view(self):
-        return self._cachable_matrix_view(self.s, self.g)
-
-    def matrix_view_for(self, *p):
-        if len(p) == 1 and isinstance(p[0], (list,tuple)):
-            p = p[0]
-        o = self.s
-        self.s = p
-        ret = self.matrix_view
-        self.s = o
-        return ret
-
-    def tview_for(self, *p):
-        return self.matrix_view_for(*p).transpose( (2,0,1) )
-
-    @property
-    def tview(self):
-        return self.matrix_view.transpose( (2,0,1) )
+    def encode(self):
+        return encode_map(self.R, self.T, self.G)
 
     def dist2goal(self, pos=None, goal_pos=None):
         return self.distnorm2goal(pos=pos, goal_pos=goal_pos)[-1]
