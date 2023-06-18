@@ -240,5 +240,14 @@ def run_check():
     print(repr(gw))
     print(gw)
 
+def vectorize_action(a):
+    v = np.zeros(len(Actions))
+    try:
+        v[ Actions.index(a) ] = 1
+    except ValueError:
+        pass
+    return v
+
+
 if __name__ == '__main__':
     run_check();
