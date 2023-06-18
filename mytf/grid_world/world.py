@@ -250,6 +250,13 @@ def vectorize_action(a):
         pass
     return v
 
+def do_move(gw,a):
+    tv_b = gw.tview
+    e_a = vectorize_action(a)
+    gw.T.move(a)
+    tv_a = gw.tview
+
+    return (tv_b, tv_a, e_a, gw.tmap)
 
 if __name__ == '__main__':
     run_check();
