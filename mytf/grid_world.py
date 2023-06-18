@@ -213,6 +213,7 @@ def HardRoom():
     gw = GridWorld(r)
     gw.s0 = gw.s = 2,3
     gw.g0 = gw.g = 7,9
+    gw.reset()
     return gw
 
 def SuperHardRoom():
@@ -235,7 +236,7 @@ def SuperHardRoom():
     return gw
 
 def run_check():
-    gw = GridWorld()
+    gw = SuperHardRoom()
     print(repr(gw))
     print(gw)
 
