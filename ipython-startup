@@ -2,8 +2,8 @@
 
 import mytf
 
-gw = mytf.grid_world.SuperHardRoom()
-em = gw.encode()
-ev = gw.encode_view()
+shr = mytf.grid_world.SuperHardRoom()
+hr  = mytf.grid_world.HardRoom()
+er  = mytf.grid_world.EasyRoom()
 
-print("Map (gw):\n", gw)
+gw = shr
