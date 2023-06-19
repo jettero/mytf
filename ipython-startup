@@ -2,8 +2,12 @@
 
 import mytf
 
-shr = mytf.grid_world.SuperHardRoom()
-hr  = mytf.grid_world.HardRoom()
 er  = mytf.grid_world.EasyRoom()
+hr  = mytf.grid_world.HardRoom()
+shr = mytf.grid_world.SuperHardRoom()
 
 gw = shr
+
+/print er
+/print hr
+/print shr
