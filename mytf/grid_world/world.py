@@ -16,6 +16,13 @@ import space.exceptions as E
 log = logging.getLogger(__name__)
 Actions = tuple('nsew') + tuple('NE SE NW SW'.split())
 
+VOID = 0
+WALL = 1
+CELL = 2
+GOAL = 3
+TURTLE = 4
+MAX_TYPE = 5
+
 class Goal(Ubi):
     a = '*'
 
@@ -24,26 +31,37 @@ class Turtle(Human):
     def __init__(self):
         super().__init__('Grid World Turtle', 'Turtle')
 
-def encode_map(map, turtle, goal, one_hot=True):
+def encode_map(map, turtle, goal, one_hot=True, min_size=None):
     def _inner():
         for (x,y), cell in map:
             if isinstance(cell, Wall):
-                yield 1
+                yield WALL
             elif isinstance(cell, Cell):
                 if turtle in cell:
-                    yield 4
+                    yield TURTLE
                 elif goal in cell:
-                    yield 3
+                    yield GOAL
                 else:
-                    yield 2
+                    yield CELL
             else:
-                yield 0
+                yield VOID
 
     b = map.bounds
     r = np.array(list(_inner()), dtype=np.int32).reshape( (b.YY, b.XX) )
+    if isinstance(min_size, (list,tuple)) and len(min_size) == 2:
+        while r.shape[-2] < min_size[0]:
+            r = np.append(r, [0], 0, axis=0)
+
     if one_hot:
-        r = np.eye(5, dtype=np.int32)[r].transpose(2,0,1)
-        r[2] = np.maximum(r[2], np.maximum(r[3], r[4]))
+        # 1. make a one hot matrix by taking the indices of an eye.
+        # 2. not really sure why this gives the (x,y,MAX_TYPE) shape, but it does
+        # 3. then transpose/swap axis 2 and 1 so we get our more human readable
+        #    (MAX_TYPE,x,y) shape
+        r = np.eye(MAX_TYPE, dtype=np.int32)[r].transpose(2,0,1)
+
+        # 4. make sure the TURTLE and GOAL spots are also CELL spots through
+        #    "clever" use of min/max
+        r[CELL] = np.maximum(r[CELL], np.maximum(r[GOAL], r[TURTLE]))
     return r
 
 class GridWorld:
@@ -132,7 +150,7 @@ class GridWorld:
         a_map = self.R
         if visicalc or visible_area_only:
             # compute the visicalc so the view is colored
-            a_map_ = self.R.visicalc_submap( self.T, maxdist=self.maxdist )
+            a_map_ = self.R.maxdist_submap( self.T, maxdist=self.maxdist )
             if visible_area_only:
                 # even if we don't actually use the submap
                 a_map = a_map_
@@ -160,21 +178,29 @@ class GridWorld:
 
     @property
     def view(self):
-        return self.R.visicalc_submap( self.T, maxdist=self.maxdist )
+        return self.R.maxdist_submap( self.T, maxdist=self.maxdist )
 
     @property
     def tview(self):
         return self.encode_view()
 
-    @property
-    def tmap(self):
-        return self.encode()
+    def encode_view(self, one_hot=True):
+        return encode_map(self.view, self.T, self.G, one_hot=one_hot)
 
-    def encode_view(self):
-        return encode_map(self.view, self.T, self.G)
-
-    def encode(self):
-        return encode_map(self.R, self.T, self.G)
+    def encode(self, min_size=None, one_hot=True, pad_x=0, pad_y=0):
+        # In [1]: /print e.shape
+        # ...: e = np.append(e, np.zeros((e.shape[0], 1)), axis=1)
+        # ...: e = np.append(e, np.zeros((e.shape[0], 1)), axis=1)
+        # ...: e = np.append(e, np.zeros((1, e.shape[1])), axis=0)
+        # ...: e.shape
+        # (15, 17)
+        # Out[1]: (16, 19)
+        e = encode_map(self.R, self.T, self.G, one_hot=one_hot, min_size=min_size)
+        while pad_x > e.shape[1]:
+            e = np.append(e, np.zeros((e.shape[0], 1)), axis=1)
+        while pad_y > e.shape[0]:
+            e = np.append(e, np.zeros((1, e.shape[0])), axis=0)
+        return e
 
     def dist2goal(self, pos=None, goal_pos=None):
         return self.distnorm2goal(pos=pos, goal_pos=goal_pos)[-1]
@@ -195,6 +221,15 @@ class GridWorld:
         if n != 0:
             return d/n, n
         return d, 0.0
+
+    def do_move(self, a):
+        tv_b = self.tview
+        e_a = vectorize_action(a)
+        self.T.move(a)
+        tv_a = self.tview
+
+        return (tv_b, tv_a, e_a, self.tmap)
+
 
 def EasyRoom(x=5,y=5, s=None, g=None):
     room = Room(x, y)
@@ -249,14 +284,6 @@ def vectorize_action(a):
     except ValueError:
         pass
     return v
-
-def do_move(gw,a):
-    tv_b = gw.tview
-    e_a = vectorize_action(a)
-    gw.T.move(a)
-    tv_a = gw.tview
-
-    return (tv_b, tv_a, e_a, gw.tmap)
 
 if __name__ == '__main__':
     run_check();
