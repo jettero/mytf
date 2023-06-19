@@ -73,6 +73,8 @@ def encode_map(map, turtle, goal, one_hot=True, min_size=None, pad=None):
     return r
 
 class GridWorld:
+    largest_size = [0,0]
+
     def __init__(self, room=None, maxdist=3):
         self.maxdist = maxdist
 
@@ -90,6 +92,12 @@ class GridWorld:
             self.R.drop_item_randomly(self.G)
 
         self.save_initial()
+
+        if self.R.bounds.XX > self.largest_size[0]:
+            self.largest_size[0] = self.R.bounds.XX
+
+        if self.R.bounds.YY > self.largest_size[1]:
+            self.largest_size[1] = self.R.bounds.YY
 
     def save_initial(self):
         self.s0 = self.s
@@ -226,12 +234,16 @@ class GridWorld:
         return d, 0.0
 
     def do_move(self, a):
-        tv_b = self.tview
+        tv_a = tv_b = self.tview
         e_a = vectorize_action(a)
-        self.T.move(a)
-        tv_a = self.tview
 
-        return (tv_b, tv_a, e_a, self.tmap)
+        if 1 in e_a:
+            self.T.move(a)
+            tv_a = self.tview
+
+        full_map_encoding = self.encode(pad=self.largest_size)
+
+        return (tv_b, tv_a, e_a, full_map_encoding)
 
 
 def EasyRoom(x=5,y=5, s=None, g=None):
