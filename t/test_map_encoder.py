@@ -14,3 +14,6 @@ def test_tview(gw):
             gw.s = x,y
             tview = gw.tview
             assert tview.shape == (5,7,7)
+
+def test_encode_padding(gw):
+    assert gw.encode(pad=(18,18)).shape == (5,18,18)

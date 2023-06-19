@@ -31,7 +31,7 @@ class Turtle(Human):
     def __init__(self):
         super().__init__('Grid World Turtle', 'Turtle')
 
-def encode_map(map, turtle, goal, one_hot=True, min_size=None):
+def encode_map(map, turtle, goal, one_hot=True, min_size=None, pad=None):
     def _inner():
         for (x,y), cell in map:
             if isinstance(cell, Wall):
@@ -51,6 +51,14 @@ def encode_map(map, turtle, goal, one_hot=True, min_size=None):
     if isinstance(min_size, (list,tuple)) and len(min_size) == 2:
         while r.shape[-2] < min_size[0]:
             r = np.append(r, [0], 0, axis=0)
+
+    if isinstance(pad, (list,tuple)) and len(pad) == 2:
+        pad_x,pad_y = pad
+
+        while pad_x > r.shape[1]:
+            r = np.append(r, np.zeros((r.shape[0], 1), dtype=np.int32), axis=1)
+        while pad_y > r.shape[0]:
+            r = np.append(r, np.zeros((1, r.shape[1]), dtype=np.int32), axis=0)
 
     if one_hot:
         # 1. make a one hot matrix by taking the indices of an eye.
@@ -187,7 +195,7 @@ class GridWorld:
     def encode_view(self, one_hot=True):
         return encode_map(self.view, self.T, self.G, one_hot=one_hot)
 
-    def encode(self, min_size=None, one_hot=True, pad_x=0, pad_y=0):
+    def encode(self, min_size=None, one_hot=True, pad=None):
         # In [1]: /print e.shape
         # ...: e = np.append(e, np.zeros((e.shape[0], 1)), axis=1)
         # ...: e = np.append(e, np.zeros((e.shape[0], 1)), axis=1)
@@ -195,12 +203,7 @@ class GridWorld:
         # ...: e.shape
         # (15, 17)
         # Out[1]: (16, 19)
-        e = encode_map(self.R, self.T, self.G, one_hot=one_hot, min_size=min_size)
-        while pad_x > e.shape[1]:
-            e = np.append(e, np.zeros((e.shape[0], 1)), axis=1)
-        while pad_y > e.shape[0]:
-            e = np.append(e, np.zeros((1, e.shape[0])), axis=0)
-        return e
+        return encode_map(self.R, self.T, self.G, one_hot=one_hot, min_size=min_size, pad=pad)
 
     def dist2goal(self, pos=None, goal_pos=None):
         return self.distnorm2goal(pos=pos, goal_pos=goal_pos)[-1]
