@@ -237,7 +237,8 @@ class GridWorld:
         tv_a = tv_b = self.tview
         e_a = vectorize_action(a)
 
-        if 1 in e_a:
+        can_move, err_json = self.T.can_move_words(a)
+        if can_move:
             self.T.move(a)
             tv_a = self.tview
 
