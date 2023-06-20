@@ -2,8 +2,9 @@
 # coding: utf-8
 
 import logging
-import functools
+import inspect
 from collections import namedtuple
+
 import numpy as np
 
 from ..util.misc import terminal_size, write_now
@@ -23,7 +24,32 @@ GOAL = 3
 TURTLE = 4
 MAX_TYPE = 5
 
-ViewActionView = namedtuple('ViewActionView', ['lob', 'av', 'rob'])
+class ViewActionView(namedtuple('ViewActionView', ['lob', 'act', 'rob'])):
+    @property
+    def shape(self):
+        return tuple( x.shape for x in self )
+
+    def cat(self, *x):
+        items = [ y.promote() for y in (self, *x) ]
+        return ViewActionView(
+            np.concatenate([x.lob for x in items]),
+            np.concatenate([x.act for x in items]),
+            np.concatenate([x.rob for x in items]),
+        )
+
+    @property
+    def depth(self):
+        return len(self.act.shape)
+
+    def promote(self, depth=2):
+        ret = self
+        while ret.depth < depth:
+            ret = ViewActionView(
+            ret.lob.reshape((1,*ret.lob.shape)),
+            ret.act.reshape((1,*ret.act.shape)),
+            ret.rob.reshape((1,*ret.rob.shape)),
+        )
+        return ret
 
 class Goal(Ubi):
     a = '*'
@@ -237,24 +263,20 @@ class GridWorld:
 
     def do_move(self, a):
         """
-        if pad is specified as '-', we'll try to guess the largest size in use
-        if pad is 'sq', we'll try to make that largest size a square (n x n)
+        we return
 
-        in any case, we return
-
-            (tview_before, tview_after, vectorized_action, encoded_full_map)
-
+            ViewActionView(lob, act, rob) / tuple(lob,act,rob)
         """
 
         lob = rob = self.tview
-        av = vectorize_action(a)
+        act = vectorize_action(a)
 
         can_move, err_json = self.T.can_move_words(a)
         if can_move:
             self.T.move(a)
             rob = self.tview
 
-        return ViewActionView(tv_b, e_a, tv_a)
+        return ViewActionView(lob, act, rob)
 
 
 def EasyRoom(x=5,y=5, s=None, g=None):
