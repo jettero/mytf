@@ -23,6 +23,8 @@ GOAL = 3
 TURTLE = 4
 MAX_TYPE = 5
 
+ViewActionView = namedtuple('ViewActionView', ['lob', 'av', 'rob'])
+
 class Goal(Ubi):
     a = '*'
 
@@ -233,7 +235,7 @@ class GridWorld:
             return d/n, n
         return d, 0.0
 
-    def do_move(self, a, pad='-'):
+    def do_move(self, a):
         """
         if pad is specified as '-', we'll try to guess the largest size in use
         if pad is 'sq', we'll try to make that largest size a square (n x n)
@@ -244,22 +246,15 @@ class GridWorld:
 
         """
 
-        tv_a = tv_b = self.tview
-        e_a = vectorize_action(a)
+        lob = rob = self.tview
+        av = vectorize_action(a)
 
         can_move, err_json = self.T.can_move_words(a)
         if can_move:
             self.T.move(a)
-            tv_a = self.tview
+            rob = self.tview
 
-        if pad == '-':
-            pad = self.largest_size
-        elif pad == 'sq':
-            pad = ( max(*self.largest_size), ) * 2
-
-        full_map_encoding = self.encode(pad=pad)
-
-        return (tv_b, tv_a, e_a, full_map_encoding)
+        return ViewActionView(tv_b, e_a, tv_a)
 
 
 def EasyRoom(x=5,y=5, s=None, g=None):
