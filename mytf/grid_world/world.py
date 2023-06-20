@@ -233,7 +233,17 @@ class GridWorld:
             return d/n, n
         return d, 0.0
 
-    def do_move(self, a):
+    def do_move(self, a, pad='-'):
+        """
+        if pad is specified as '-', we'll try to guess the largest size in use
+        if pad is 'sq', we'll try to make that largest size a square (n x n)
+
+        in any case, we return
+
+            (tview_before, tview_after, vectorized_action, encoded_full_map)
+
+        """
+
         tv_a = tv_b = self.tview
         e_a = vectorize_action(a)
 
@@ -242,7 +252,12 @@ class GridWorld:
             self.T.move(a)
             tv_a = self.tview
 
-        full_map_encoding = self.encode(pad=self.largest_size)
+        if pad == '-':
+            pad = self.largest_size
+        elif pad == 'sq':
+            pad = ( max(*self.largest_size), ) * 2
+
+        full_map_encoding = self.encode(pad=pad)
 
         return (tv_b, tv_a, e_a, full_map_encoding)
 
