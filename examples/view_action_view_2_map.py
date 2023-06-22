@@ -1,4 +1,12 @@
-import mytf
+#!/usr/bin/env python
+
+try:
+    import mytf
+except ModuleNotFoundError:
+    import sys
+    sys.path.insert(0, '.')
+    import mytf
+
 import tensorflow as tf
 import numpy as np
 
@@ -32,7 +40,7 @@ o = tf.keras.layers.Dense(fdr, activation='relu')(o)
 o = tf.keras.layers.Reshape(ims)(o)
 print(f'cdr: {o.shape}')
 
-# Conv, LSTM, Dense
+# Conv ⇒ LSTM ⇒ Dense
 o = tf.keras.layers.ConvLSTM2D(kernel_size=2, filters=fcl, activation='relu')(o)
 o = tf.keras.layers.Dense(fdl, activation='relu')(o)
 print(f'cl2: {o.shape}')
@@ -47,9 +55,11 @@ print(f'fdr: {o.shape}')
 MapImaginerModel = tf.keras.Model(inputs=(lob,act,rob), outputs=(o,), name='MapImaginerModel')
 MapImaginerModel.compile(loss='mse', optimizer='adam')
 MapImaginerModel.summary()
-    
+
 y_pred, = MapImaginerModel(x_input)
-    
+
 print(f'x_input: {x_input.shape}')
 print(f'y_true:  {y_true.shape}')
 print(f'y_pred:  {y_pred.shape}')
+
+# training/fitting
