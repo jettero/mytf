@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import re
 import tensorflow as tf
 
 @tf.function
@@ -67,3 +68,26 @@ def stringify_bytes(x, encoding='UTF-8', depth=8):
         x = fuzzy_bits_to_bytes(x)
     x = x.numpy()
     return x.decode(encoding) if isinstance(x, (bytes,)) else [ y.decode() for y in x ]
+
+def sans_color(x):
+    return re.sub(r'\x1b\[[\d;]*m', '', str(x))
+
+def colorless_len(x):
+    return len(sans_color(x))
+
+def _side_by_side(x, y):
+    x = x.splitlines()
+    y = y.splitlines()
+    m = max(colorless_len(i) for i in x) + 2
+
+    while len(x) < len(y):
+        x.append('')
+
+    while len(y) < len(x):
+        y.append('')
+
+    for xl, yl in zip(x,y):
+        yield xl + (" " * (m - colorless_len(xl))) + yl
+
+def side_by_side(x, y):
+    return "\n".join( _side_by_side(x,y) ) + "\n"
