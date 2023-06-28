@@ -38,7 +38,7 @@ class ViewActionView(namedtuple('ViewActionView', ['lob', 'act', 'rob'])):
     def slice(self, x):
         return ViewActionView(*(y[x] for y in self))
 
-def encode_map(map, turtle, goal, one_hot=True, min_size=None, pad=None):
+def encode_view(map, turtle, goal, one_hot=True, min_size=None, pad=None):
     def _inner():
         for (x,y), cell in map:
             if isinstance(cell, Wall):
@@ -79,21 +79,33 @@ def encode_map(map, turtle, goal, one_hot=True, min_size=None, pad=None):
         r[CELL] = np.maximum(r[CELL], np.maximum(r[GOAL], r[TURTLE]))
     return r
 
-def decode_map(tview, with_goal=True, with_turtle=False):
+def decode_view(tview, with_goal=True, with_turtle=False, unravel_only=False):
+    # TODO: this assumes a one-hot encoding ... it should probably have a mode
+    # where we skip the unravel
 
     tview = np.array(tview)
 
     ss = tview.shape[-2:]
-    mt = np.unravel_index( np.argmax(tview[TURTLE]), ss )
-    mg = np.unravel_index( np.argmax(tview[GOAL]), ss )
+    ug = ut = None
+    mg = np.argmax(tview[GOAL])
+    mt = np.argmax(tview[TURTLE])
 
     tview[TURTLE] = np.zeros( ss )
     tview[GOAL] = np.zeros( ss )
 
-    tview[TURTLE][ mt ] = 1
-    tview[GOAL][ mg ] = 1
+    if  mg > 0.3:
+        tview[GOAL][ np.unravel_index( mg, ss ) ] = mg * 2
+        # tview[][]=1 might seem to make more sense, but then it can "lose" in the
+        # argmax below.
+
+    if mt > 0.3:
+        tview[TURTLE][ np.unravel_index( mt, ss ) ] = mt * 2
 
     t = np.argmax(tview, axis=0)
+
+    if unravel_only:
+        return t
+
     ret = Map(*ss)
 
     # NOTE: the matrix looks right in ipython, but either the one-hot transform
@@ -127,7 +139,7 @@ class EncoderTrait:
         return self.encode_view()
 
     def encode_view(self, one_hot=True):
-        return encode_map(self.view, self.T, self.G, one_hot=one_hot)
+        return encode_view(self.view, self.T, self.G, one_hot=one_hot)
 
     def encode(self, min_size=None, one_hot=True, pad=None):
         # In [1]: /print e.shape
@@ -137,7 +149,8 @@ class EncoderTrait:
         # ...: e.shape
         # (15, 17)
         # Out[1]: (16, 19)
-        return encode_map(self.R, self.T, self.G, one_hot=one_hot, min_size=min_size, pad=pad)
+        return encode_view(self.R, self.T, self.G, one_hot=one_hot, min_size=min_size, pad=pad)
+
 
 class ScrollHeadTrait:
     def print_scroll_head(self, comment=tuple(), visicalc=True, visible_area_only=False):

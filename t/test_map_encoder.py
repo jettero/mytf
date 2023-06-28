@@ -2,8 +2,8 @@
 # coding: utf-8
 
 import pytest
-from mytf.grid_world import Cell, GridWorld, SuperHardRoom, Map
-from space.map import Room, Cell, Wall
+from mytf.grid_world import Cell, GridWorld, SuperHardRoom
+from space.map import Room, Cell, Wall, Map
 
 @pytest.fixture(params=[SuperHardRoom, GridWorld])
 def gw(request):
