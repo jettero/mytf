@@ -39,17 +39,20 @@ o = tf.keras.layers.Concatenate(name='mixed')([
 N = np.prod(x_7.shape[1:])
 
 o = tf.keras.layers.Dense(20 * N, activation='relu')(o)
+o = tf.keras.layers.Dropout(0.1)(o)
 o = tf.keras.layers.Dense(20 * N, activation='relu')(o)
 o = tf.keras.layers.Reshape((*x_7.shape[1:3], 100))(o)
 print(f'merged input: {o.shape}')
 
 o = tf.keras.layers.Conv2D(kernel_size=3, filters=5*N, activation='relu')(o)
 o = tf.keras.layers.Dense(2*N, activation='relu')(o)
+o = tf.keras.layers.Dropout(0.1)(o)
 o = tf.keras.layers.Dense(2*N, activation='relu')(o)
 o = tf.keras.layers.Conv2DTranspose(kernel_size=3, filters=5*N, activation='relu')(o)
 print(f'thought: {o.shape}')
 
 o = tf.keras.layers.Dense(1024, activation='relu')(o)
+o = tf.keras.layers.Dropout(0.1)(o)
 o = tf.keras.layers.Dense(1024, activation='relu')(o)
 o = tf.keras.layers.Dense(5, activation='relu')(o)
 print(f'final: {o.shape}')
