@@ -2,6 +2,7 @@
 
 import sys, shutil, argparse
 import numpy as np
+import tensorflow as tf
 
 def bnd(lb, val, ub, swap=True):
     ''' bnd(lb,val,ub)
@@ -77,6 +78,24 @@ def ema(*x, a=0.5):
             continue
         r = a*i + (1-a)*r
     return r
+
+def features_last(x):
+    s = x.shape
+    p = list(range(len(s)))
+    p.append(p.pop(-3))
+
+    if isinstance(x, np.ndarray):
+        return x.transpose(p)
+    return tf.transpose(x, perm=p)
+
+def features_first(x):
+    s = x.shape
+    p = list(range(len(s)))
+    p.insert(-2, p.pop(-1))
+
+    if isinstance(x, np.ndarray):
+        return x.transpose(p)
+    return tf.transpose(x, perm=p)
 
 def format_output_vector(vec, action=None, γ=None, β=None,
         f='5.2f', A=tuple('nsew') + tuple('NE SE NW SW'.split())):

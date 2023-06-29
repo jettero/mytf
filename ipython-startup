@@ -7,8 +7,15 @@ hr  = mytf.grid_world.HardRoom()
 shr = mytf.grid_world.SuperHardRoom()
 
 gw = shr
-s0 = gw.do_move('blah')
+s0,a0,_ = gw.do_move('blah')
 
 /print er
 /print hr
 /print shr
+
+from mytf.grid_world.agent import Agent
+agent = Agent(shr)
+
+#from mytf.grid_world.agent import shortest_path_slice
+#sps = shortest_path_slice( shr.encode() )
+#/print sps

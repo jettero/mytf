@@ -6,6 +6,7 @@ import mytf
 import tensorflow as tf
 import numpy as np
 
+from mytf.grid_world.agent import Agent
 from mytf.grid_world.util import decode_view
 from mytf.strings import side_by_side
 
@@ -16,14 +17,13 @@ shr = mytf.grid_world.SuperHardRoom()
 gw = shr
 s0 = gw.do_move('blah')
 
-actions = "e SE SE SE e e e e e SE s s s s SW ".split()
-x_7, x_a, y_7 = s0.cat( *(gw.do_move(x) for x in actions) )
+agent = Agent(gw)
 
-x_7 = tf.transpose(x_7, perm=[0, 2,3,1])
-y_7 = tf.transpose(y_7, perm=[0, 2,3,1])
+actions = agent.shortest_path_to_goal()
+x_7o, x_a, y_7o = s0.cat( *(gw.do_move(x) for x in actions) )
 
-print('x_70\n', x_7[0])
-print('y_70\n', y_7[0])
+x_7 = tf.transpose(x_7o, perm=[0, 2,3,1])
+y_7 = tf.transpose(y_7o, perm=[0, 2,3,1])
 
 print(f'x_7 = {x_7.shape}')
 print(f'x_a = {x_a.shape}')
@@ -58,18 +58,20 @@ PredictAction = tf.keras.Model(inputs=(lob,act), outputs=(o,), name='PredictActi
 PredictAction.compile(loss='mse', optimizer='adam')
 PredictAction.summary()
 
-example_input = (x_7, x_a)
-y_pred, = PredictAction(example_input)
+input_data = (x_7, x_a)
+y_pred, = PredictAction(input_data)
 print(f'y_pred: {y_pred.shape}')
 
+y_predo = np.transpose(y_pred, axes=[0,3,1,2])
+
 def do_lap(epochs=100, workers=NUM_CPU):
-    PredictAction.fit(x=(x_7,x_a), y=y_7, epochs=epochs, verbose=True, use_multiprocessing=True, workers=workers)
-    y_pred, = PredictAction((x_7,x_a))
-    for y,y_ in zip(y_7, y_pred):
-        y = tf.transpose(y, perm=[2,0,1])
-        y_ = tf.transpose(y_, perm=[2,0,1])
+    global y_pred, y_predo
+    PredictAction.fit(x=input_data, y=y_7, epochs=epochs, verbose=True, use_multiprocessing=True, workers=workers)
+    y_pred, = PredictAction(input_data)
+    y_predo = np.transpose(y_pred, axes=[0,3,1,2])
+    for y,yp in zip(y_7o, y_predo):
         d1 = decode_view(y, with_turtle=True)
-        d2 = decode_view(y_, with_turtle=True)
+        d2 = decode_view(yp, with_turtle=True)
         print( side_by_side(str(d1), str(d2)) )
 
 # print("use /do_lap to run the network 100 times and print things")

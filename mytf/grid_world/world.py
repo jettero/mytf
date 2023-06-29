@@ -9,7 +9,7 @@ from space.item import Ubi
 
 from .const import Actions
 from .util import ViewActionView
-from .util import ScrollHeadTrait, EncoderTrait
+from .util import ScrollHeadTrait, EncoderTrait, vectorize_action
 
 class Goal(Ubi):
     a = '*'
@@ -191,14 +191,6 @@ def run_check():
     gw = SuperHardRoom()
     print(repr(gw))
     print(gw)
-
-def vectorize_action(a):
-    v = np.zeros(len(Actions))
-    try:
-        v[ Actions.index(a) ] = 1
-    except ValueError:
-        pass
-    return v
 
 if __name__ == '__main__':
     run_check();

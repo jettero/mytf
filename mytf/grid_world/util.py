@@ -4,9 +4,9 @@
 import numpy as np
 
 from collections import namedtuple
-from ..util.misc import terminal_size, write_now
 from space.map import Cell, Wall, Map
-from .const import VOID, WALL, CELL, GOAL, TURTLE, MAX_TYPE
+from ..util.misc import terminal_size, write_now
+from .const import VOID, WALL, CELL, GOAL, TURTLE, MAX_TYPE, Actions
 
 class ViewActionView(namedtuple('ViewActionView', ['lob', 'act', 'rob'])):
     @property
@@ -79,27 +79,28 @@ def encode_view(map, turtle, goal, one_hot=True, min_size=None, pad=None):
         r[CELL] = np.maximum(r[CELL], np.maximum(r[GOAL], r[TURTLE]))
     return r
 
-def decode_view(tview, with_goal=True, with_turtle=False, unravel_only=False):
+def decode_view(tview, with_goal=True, with_turtle=False, unravel_only=False, threshold=0.3):
     # TODO: this assumes a one-hot encoding ... it should probably have a mode
     # where we skip the unravel
 
     tview = np.array(tview)
 
     ss = tview.shape[-2:]
-    ug = ut = None
-    mg = np.argmax(tview[GOAL])
+    vg = np.max(tview[GOAL]) # the highest value in the slice
+    vt = np.max(tview[TURTLE])
+    mg = np.argmax(tview[GOAL]) # the index in the flat reshape of tview[GOAL] with the max value
     mt = np.argmax(tview[TURTLE])
 
     tview[TURTLE] = np.zeros( ss )
     tview[GOAL] = np.zeros( ss )
 
-    if  mg > 0.3:
-        tview[GOAL][ np.unravel_index( mg, ss ) ] = mg * 2
-        # tview[][]=1 might seem to make more sense, but then it can "lose" in the
-        # argmax below.
+    if vg > threshold:
+        tview[GOAL][ np.unravel_index( mg, ss ) ] = 2
+        # tview[][]=1 might seem to make more sense, but then it can "lose" in
+        # the argmax below.
 
-    if mt > 0.3:
-        tview[TURTLE][ np.unravel_index( mt, ss ) ] = mt * 2
+    if vt > threshold:
+        tview[TURTLE][ np.unravel_index( mt, ss ) ] = 2
 
     t = np.argmax(tview, axis=0)
 
@@ -132,6 +133,14 @@ def decode_view(tview, with_goal=True, with_turtle=False, unravel_only=False):
                 ret[x,y] = Goal()
 
     return ret
+
+def vectorize_action(a):
+    v = np.zeros(len(Actions))
+    try:
+        v[ Actions.index(a) ] = 1
+    except ValueError:
+        pass
+    return v
 
 class EncoderTrait:
     @property
