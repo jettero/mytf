@@ -1,6 +1,7 @@
 # vim:ft=python:
 
 import mytf
+from mytf.grid_world.const import GOAL, TURTLE, CELL, WALL
 
 er  = mytf.grid_world.EasyRoom()
 hr  = mytf.grid_world.HardRoom()

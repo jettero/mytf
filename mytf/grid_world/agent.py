@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import numpy as np
+from space.map import Cell
 from .const import CELL, GOAL, Actions
 
 def adjacent_cells(cells, ii, threshold=0.3):
@@ -78,3 +79,18 @@ class Agent:
             if d is None:
                 break
         return ret
+
+    def do_move(self, dir):
+        self.gw.do_move(dir)
+
+    def one_hot_shortrange_goal(self, goal_only=False):
+        v = self.gw.view
+        t = self.gw.tview
+        g = np.zeros(t[GOAL].shape, dtype=np.float32)
+        m = np.max(self.sps)
+        for vpos, apos in [(p,x.pos) for p,x in v if isinstance(x, Cell)]:
+            g[vpos] = self.sps[apos]
+        if goal_only:
+            return g
+        t[GOAL] = np.array(g == np.max(g), dtype=np.int32)
+        return t
