@@ -5,11 +5,10 @@ import numpy as np
 import pytest
 from mytf.util import NumpyTuple
 
-# NOTE: there's a lotta intended jokes below... none are actually funny
-
 TbT = (2,3)
-oTbT = (1,2,3)
-tTbT = (2,2,3)
+t1TbT = (1, *TbT)
+t2TbT = (2, *TbT)
+t4TbT = (4, *TbT)
 
 def chi_square_random_variable_matrix(s=TbT):
     return np.random.chisquare(3.141592653, s)
@@ -24,16 +23,20 @@ def a():
 def b():
     return NumpyTuple( (csrm() for _ in range(3)) )
 
-@pytest.fixture(scope='function')
-def c():
-    return NumpyTuple( (csrm() for _ in range(3)) ).promote()
-
-@pytest.fixture(scope='function')
-def d():
-    return NumpyTuple( (csrm() for _ in range(3)) ).promote().promote()
-
-def test_initial_shape(a,b,c,d):
+def test_initial_shape(a,b):
     assert a.shape == ( TbT, ) * 3
     assert b.shape == ( TbT, ) * 3
-    assert c.shape == (1,*(( TbT, ) * 3))
-    assert d.shape == (1,*(( TbT, ) * 3))
+
+def test_promote(a,b):
+    assert a.promote().shape == ( t1TbT, ) * 3
+    assert b.promote().shape == ( t1TbT, ) * 3
+
+def test_too_promote(a,b):
+    assert a.promote().shape == ( t1TbT, ) * 3
+    assert b.promote().shape == ( t1TbT, ) * 3
+
+def test_cat(a,b):
+    assert a.cat(b).shape == ( t2TbT, ) * 3
+
+def test_cat(a,b):
+    assert a.cat(b).cat( b.cat(a) ).shape == ( t4TbT, ) * 3

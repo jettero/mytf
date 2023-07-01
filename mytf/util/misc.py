@@ -31,7 +31,7 @@ class NumpyTuple(tuple):
         """
         if depth is None:
             if self.D is None:
-                self.D = self.depth
+                self.D = self.depth + 1
             depth = self.D
         ret = self
         while ret.depth < depth:
