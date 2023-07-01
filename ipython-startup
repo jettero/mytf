@@ -2,20 +2,27 @@
 
 import mytf
 from mytf.grid_world.const import GOAL, TURTLE, CELL, WALL
+from mytf.grid_world.agent import Agent
 
 er  = mytf.grid_world.EasyRoom()
 hr  = mytf.grid_world.HardRoom()
 shr = mytf.grid_world.SuperHardRoom()
 
 gw = shr
-s0,a0,_ = gw.do_move('blah')
+s0 = gw.do_move('blah')
+
+agent = Agent(shr)
+actions = agent.shortest_path_to_goal()
+vav = s0.cat(*(gw.do_move(a) for a in actions))
+
+/gw.reset
 
 /print er
 /print hr
 /print shr
 
-from mytf.grid_world.agent import Agent
-agent = Agent(shr)
+/print f's0.shape:  {s0.shape}'
+/print f'vav.shape: {vav.shape}'
 
 #from mytf.grid_world.agent import shortest_path_slice
 #sps = shortest_path_slice( shr.encode() )

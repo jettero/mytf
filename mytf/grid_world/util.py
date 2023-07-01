@@ -8,35 +8,36 @@ from space.map import Cell, Wall, Map
 from ..util.misc import terminal_size, write_now
 from .const import VOID, WALL, CELL, GOAL, TURTLE, MAX_TYPE, Actions
 
-class ViewActionView(namedtuple('ViewActionView', ['lob', 'act', 'rob'])):
+class ViewTuple(tuple):
     @property
     def shape(self):
         return tuple( x.shape for x in self )
 
-    def cat(self, *x):
-        items = [ y.promote() for y in (self, *x) ]
-        return ViewActionView(
-            np.concatenate([x.lob for x in items]),
-            np.concatenate([x.act for x in items]),
-            np.concatenate([x.rob for x in items]),
-        )
+    def cat(self, *x, depth=4):
+        items = [ y.promote(depth=depth) for y in (self, *x) ]
+        return self.__class__(*(
+            np.concatenate([x[i] for x in items]) for i in range(len(self))
+        ))
 
     @property
     def depth(self):
-        return len(self.act.shape)
+        """ depth of the first element anyway """
+        return len(self[0].shape)
 
-    def promote(self, depth=2):
+    def promote(self, depth=4):
         ret = self
         while ret.depth < depth:
-            ret = ViewActionView(
-            ret.lob.reshape((1,*ret.lob.shape)),
-            ret.act.reshape((1,*ret.act.shape)),
-            ret.rob.reshape((1,*ret.rob.shape)),
-        )
+            ret = self.__class__(*(x.reshape((1,*x.shape)) for x in ret))
         return ret
 
     def slice(self, x):
-        return ViewActionView(*(y[x] for y in self))
+        return self.__class__(*(y[x] for y in self))
+
+class ViewView(namedtuple('ViewView', ['v1', 'v2']), ViewTuple):
+    pass
+
+class ViewActionView(namedtuple('ViewActionView', ['lob', 'act', 'rob']), ViewTuple):
+    pass
 
 def encode_view(map, turtle, goal, one_hot=True, min_size=None, pad=None):
     def _inner():
