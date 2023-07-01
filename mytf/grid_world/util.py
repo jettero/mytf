@@ -5,38 +5,13 @@ import numpy as np
 
 from collections import namedtuple
 from space.map import Cell, Wall, Map
-from ..util.misc import terminal_size, write_now
+from ..util.misc import terminal_size, write_now, NumpyTuple
 from .const import VOID, WALL, CELL, GOAL, TURTLE, MAX_TYPE, Actions
 
-class ViewTuple(tuple):
-    @property
-    def shape(self):
-        return tuple( x.shape for x in self )
-
-    def cat(self, *x, depth=4):
-        items = [ y.promote(depth=depth) for y in (self, *x) ]
-        return self.__class__(*(
-            np.concatenate([x[i] for x in items]) for i in range(len(self))
-        ))
-
-    @property
-    def depth(self):
-        """ depth of the first element anyway """
-        return len(self[0].shape)
-
-    def promote(self, depth=4):
-        ret = self
-        while ret.depth < depth:
-            ret = self.__class__(*(x.reshape((1,*x.shape)) for x in ret))
-        return ret
-
-    def slice(self, x):
-        return self.__class__(*(y[x] for y in self))
-
-class ViewView(namedtuple('ViewView', ['v1', 'v2']), ViewTuple):
+class ViewView(namedtuple('ViewView', ['v1', 'v2']), NumpyTuple):
     pass
 
-class ViewActionView(namedtuple('ViewActionView', ['lob', 'act', 'rob']), ViewTuple):
+class ViewActionView(namedtuple('ViewActionView', ['lob', 'act', 'rob']), NumpyTuple):
     pass
 
 def encode_view(map, turtle, goal, one_hot=True, min_size=None, pad=None):
