@@ -6,18 +6,29 @@ import numpy as np
 class NumpyTuple(tuple):
     D = None
 
+    def __new__(cls, *a, **kw):
+        return super().__new__(cls, a)
+
+    def __init__(self, *a, depth=None):
+        for v in a:
+            if not isinstance(v, np.ndarray):
+                raise TypeError('NumpyTuple only works with np.ndarray')
+        self.D = self.depth if depth is None else depth
+
     @property
     def shape(self):
         return tuple( x.shape for x in self )
 
     def cat(self, *x, depth=None):
         items = [ y.promote(depth=depth) for y in (self, *x) ]
-        return self.make(*(
+        return self.__class__(*(
             np.concatenate([x[i] for x in items]) for i in range(len(self))
-        ))
+        ), depth=self.D)
 
     @property
     def depth(self):
+        if len(self) < 1:
+            return None
         return len(self[0].shape)
 
     def promote(self, depth=None):
@@ -30,30 +41,14 @@ class NumpyTuple(tuple):
         array in the tuple.
         """
         if depth is None:
-            if self.D is None:
-                self.D = self.depth + 1
             depth = self.D
         ret = self
-        while ret.depth < depth:
-            ret = self.make(*(x.reshape((1,*x.shape)) for x in ret))
+        while ret.depth <= depth:
+            ret = self.__class__(*(x.reshape((1,*x.shape)) for x in ret))
         return ret
 
     def slice(self, x):
-        return self.make(*(y[x] for y in self))
-
-    @classmethod
-    def make(cls, *a):
-        # NOTE: tried to determine the right args with isinstance/issubclass,
-        # but telling the difference between a subclass of tuple and a subclass
-        # of namedtuple is surprisingly difficult since they're both tuples and
-        # have different argument signatures. I think in principle you could
-        # make it work with `import inspect`; and then analyzing the ArgSpecs
-        # ... but ... it's not really worth it.
-        try:
-            return cls(*a)
-        except TypeError:
-            pass
-        return cls(a)
+        return self.__class__(*(y[x] for y in self))
 
 def bnd(lb, val, ub, swap=True):
     ''' bnd(lb,val,ub)

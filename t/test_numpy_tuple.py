@@ -17,11 +17,11 @@ csrm = chi_square_random_variable_matrix
 
 @pytest.fixture(scope='function')
 def a():
-    return NumpyTuple( (csrm() for _ in range(3)) )
+    return NumpyTuple( *(csrm() for _ in range(3)) )
 
 @pytest.fixture(scope='function')
 def b():
-    return NumpyTuple( (csrm() for _ in range(3)) )
+    return NumpyTuple( *(csrm() for _ in range(3)) )
 
 def test_initial_shape(a,b):
     assert a.shape == ( TbT, ) * 3
@@ -38,5 +38,5 @@ def test_too_promote(a,b):
 def test_cat(a,b):
     assert a.cat(b).shape == ( t2TbT, ) * 3
 
-def test_cat(a,b):
+def test_more_cat(a,b):
     assert a.cat(b).cat( b.cat(a) ).shape == ( t4TbT, ) * 3
