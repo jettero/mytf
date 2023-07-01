@@ -4,26 +4,27 @@ import sys, shutil, argparse
 import numpy as np
 
 class NumpyTuple(tuple):
-    D = None
+    nb_depth = None
 
     def __new__(cls, *a, **kw):
         return super().__new__(cls, a)
 
-    def __init__(self, *a, depth=None):
+    def __init__(self, *a, nb_depth=None):
         for v in a:
             if not isinstance(v, np.ndarray):
                 raise TypeError('NumpyTuple only works with np.ndarray')
-        self.D = self.depth if depth is None else depth
+        self.nb_depth = self.depth if nb_depth is None else nb_depth
 
     @property
     def shape(self):
         return tuple( x.shape for x in self )
 
-    def cat(self, *x, depth=None):
-        items = [ y.promote(depth=depth) for y in (self, *x) ]
+    def cat(self, *x):
+        items = [ y.promote() for y in (self, *x) ]
         return self.__class__(*(
-            np.concatenate([x[i] for x in items]) for i in range(len(self))
-        ), depth=self.D)
+            np.concatenate([x[i] for x in items])
+            for i in range(len(self))
+        ), nb_depth=self.nb_depth)
 
     @property
     def depth(self):
@@ -31,7 +32,7 @@ class NumpyTuple(tuple):
             return None
         return len(self[0].shape)
 
-    def promote(self, depth=None):
+    def promote(self):
         """
         Promote is intended to add a batch dimension to all the numpy arrays in
         the tuple ...  It's intended to automatically sense when this has
@@ -40,11 +41,9 @@ class NumpyTuple(tuple):
         wrong thing. The depth is the len() of the shape of the first numpy
         array in the tuple.
         """
-        if depth is None:
-            depth = self.D
         ret = self
-        while ret.depth <= depth:
-            ret = self.__class__(*(x.reshape((1,*x.shape)) for x in ret))
+        while ret.depth <= self.nb_depth:
+            ret = self.__class__(*(x.reshape((1,*x.shape)) for x in ret), nb_depth=self.nb_depth)
         return ret
 
     def slice(self, x):

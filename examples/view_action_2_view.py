@@ -12,7 +12,6 @@ from mytf.strings import side_by_side
 
 NUM_CPU = multiprocessing.cpu_count()
 
-print( ", ".join( x for x in dir(mytf) if not x.startswith('_') ))
 shr = mytf.grid_world.SuperHardRoom()
 gw = shr
 s0 = gw.do_move('blah')
