@@ -4,17 +4,13 @@ import sys, shutil, argparse
 from collections import namedtuple
 import numpy as np
 
-
 class NumpyTuple(tuple):
     nb_depth = None
 
-    def __new__(cls, *a, **kw):
-        return super().__new__(cls, a)
+    def __new__(cls, *a, nb_depth=None):
+        return tuple.__new__(cls, (x if isinstance(x, np.ndarray) else np.array(x) for x in a) )
 
     def __init__(self, *a, nb_depth=None):
-        for v in a:
-            if not isinstance(v, np.ndarray):
-                raise TypeError("NumpyTuple only works with np.ndarray")
         self.nb_depth = self.depth if nb_depth is None else nb_depth
 
     @property
@@ -27,6 +23,10 @@ class NumpyTuple(tuple):
             *(np.concatenate([x[i] for x in items]) for i in range(len(self))),
             nb_depth=self.nb_depth,
         )
+
+    @property
+    def non_batched_depth(self):
+        return self.nb_depth
 
     @property
     def depth(self):
@@ -54,7 +54,7 @@ class NumpyTuple(tuple):
         return self.__class__(*(y[x] for y in self))
 
 
-class TwoSides(namedtuple("TwoSides", ["lhs", "rhs"]), NumpyTuple):
+class TwoSides(namedtuple("two_sides", ["lhs", "rhs"]), NumpyTuple):
     @property
     def lob(self):
         """left of bang [on a timeline]"""

@@ -73,5 +73,5 @@ def ntcls(request):
 
 def test_nttsc1(ntcls, a, b):
     ab = ntcls(a, b)
-    assert ab.a is a
-    assert ab.b is b
+    assert np.all(ab.a == a)
+    assert np.all(ab.b == b)
