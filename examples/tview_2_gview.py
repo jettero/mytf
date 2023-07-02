@@ -11,7 +11,7 @@ from mytf.grid_world.util import decode_view
 from mytf.strings import side_by_side
 
 NUM_CPU = multiprocessing.cpu_count()
-shr = mytf.grid_world.SuperHardRoom()
+gw = mytf.grid_world.SuperHardRoom()
 agent = Agent(gw)
 
 x0 = gw.tview
@@ -30,56 +30,43 @@ for a in actions:
 x_data = tf.transpose(x_data, perm=[0, 2, 3, 1])
 y_true = tf.transpose(y_true, perm=[0, 2, 3, 1])
 
-print(f"x_data = {x_7.shape}")
-print(f"y_true = {y_7.shape}")
+print(f"x_data = {x_data.shape}")
+print(f"y_true = {y_true.shape}")
 
+N = np.prod(x_data.shape[1:])
+M = np.prod(y_true.shape[1:])
+I = tf.keras.layers.Input(shape=x_data.shape[1:], name='left of bang')
 
-# lob = tf.keras.layers.Input(shape=x_7.shape[1:], name='left of bang')
-# act = tf.keras.layers.Input(shape=x_a.shape[1:], name='action')
-# o = tf.keras.layers.Concatenate(name='mixed')([
-#     tf.keras.layers.Flatten(name='flat-lob')(lob),
-#     tf.keras.layers.Flatten(name='flat-act')(act),
-# ])
+o = I
+o = tf.keras.layers.Conv2D(kernel_size=3, filters=4*N, activation='relu')(o)
+o = tf.keras.layers.Dense(4*N, activation='relu')(o)
+o = tf.keras.layers.Dropout(0.1)(o)
+o = tf.keras.layers.Dense(4*N, activation='relu')(o)
+o = tf.keras.layers.Conv2DTranspose(kernel_size=3, filters=4*N, activation='relu')(o)
+print(f'thought: {o.shape}')
 
-# N = np.prod(x_7.shape[1:])
+o = tf.keras.layers.Dense(M, activation='relu')(o)
+o = tf.keras.layers.Dropout(0.1)(o)
+o = tf.keras.layers.Dense(M, activation='relu')(o)
+o = tf.keras.layers.Dense(y_true.shape[-1], activation='relu')(o)
+print(f'final: {o.shape}')
 
-# o = tf.keras.layers.Dense(20 * N, activation='relu')(o)
-# o = tf.keras.layers.Dropout(0.1)(o)
-# o = tf.keras.layers.Dense(20 * N, activation='relu')(o)
-# o = tf.keras.layers.Reshape((*x_7.shape[1:3], 100))(o)
-# print(f'merged input: {o.shape}')
+SenseGoal = tf.keras.Model(inputs=(I,), outputs=(o,), name='SenseGoal')
+SenseGoal.compile(loss='mse', optimizer='adam')
+SenseGoal.summary()
 
-# o = tf.keras.layers.Conv2D(kernel_size=3, filters=5*N, activation='relu')(o)
-# o = tf.keras.layers.Dense(2*N, activation='relu')(o)
-# o = tf.keras.layers.Dropout(0.1)(o)
-# o = tf.keras.layers.Dense(2*N, activation='relu')(o)
-# o = tf.keras.layers.Conv2DTranspose(kernel_size=3, filters=5*N, activation='relu')(o)
-# print(f'thought: {o.shape}')
+y_pred, = SenseGoal(x_data)
+print(f'y_pred: {y_pred.shape}')
 
-# o = tf.keras.layers.Dense(1024, activation='relu')(o)
-# o = tf.keras.layers.Dropout(0.1)(o)
-# o = tf.keras.layers.Dense(1024, activation='relu')(o)
-# o = tf.keras.layers.Dense(5, activation='relu')(o)
-# print(f'final: {o.shape}')
+def do_lap(epochs=100, workers=NUM_CPU):
+    SenseGoal.fit(x=x_data, y=y_true, epochs=epochs, verbose=True, use_multiprocessing=True, workers=workers)
+    y_pred, = SenseGoal(x_data)
+    for t,p in zip(y_true, y_pred):
+        d1 = decode_view(y, with_turtle=True)
+        d2 = decode_view(yp, with_turtle=True)
+        print( side_by_side(str(d1), str(d2)) )
 
-# PredictAction = tf.keras.Model(inputs=(lob,act), outputs=(o,), name='PredictAction')
-# PredictAction.compile(loss='mse', optimizer='adam')
-# PredictAction.summary()
-
-# input_data = (x_7, x_a)
-# y_pred, = PredictAction(input_data)
-# print(f'y_pred: {y_pred.shape}')
-
-# y_predo = np.transpose(y_pred, axes=[0,3,1,2])
-
-# def do_lap(epochs=100, workers=NUM_CPU):
-#     global y_pred, y_predo
-#     PredictAction.fit(x=input_data, y=y_7, epochs=epochs, verbose=True, use_multiprocessing=True, workers=workers)
-#     y_pred, = PredictAction(input_data)
-#     y_predo = np.transpose(y_pred, axes=[0,3,1,2])
-#     for y,yp in zip(y_7o, y_predo):
-#         d1 = decode_view(y, with_turtle=True)
-#         d2 = decode_view(yp, with_turtle=True)
-#         print( side_by_side(str(d1), str(d2)) )
-
-# # print("use /do_lap to run the network 100 times and print things")
+if __name__ == '__main__':
+    do_lap()
+else:
+    print("use /do_lap to run the network 100 times and print things")

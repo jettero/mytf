@@ -90,8 +90,12 @@ class Agent:
         t = self.gw.tview
         g = np.zeros(t[GOAL].shape, dtype=np.float32)
         m = np.max(self.sps)
-        for vpos, apos in [(p, x.pos) for p, x in v if isinstance(x, Cell)]:
-            g[vpos] = self.sps[apos]
+        for (vy,vx), (ay,ax) in [(p, x.pos) for p, x in v if isinstance(x, Cell)]:
+            try:
+                g[vx,vy] = self.sps[ax,ay]
+            except IndexError as e:
+                print(v)
+                raise Exception(f'indexing error while computing 1hot short goals g[vpos={vpos}] sps[apos={apos}] on g.shape={g.shape} vs sps.shape={self.sps.shape} -- v={v!r}') from e
         if goal_only:
             return g
         t[GOAL] = np.array(g == np.max(g), dtype=np.int32)

@@ -7,30 +7,3 @@ from mytf.grid_world.agent import Agent
 er  = mytf.grid_world.EasyRoom()
 hr  = mytf.grid_world.HardRoom()
 shr = mytf.grid_world.SuperHardRoom()
-
-gw = shr
-s0 = gw.do_move('blah')
-
-agent = Agent(shr)
-actions = agent.shortest_path_to_goal()
-
-s1 = gw.do_move('e')
-/print f'WTF( s0.shape:   {s0.shape}   )'
-/print f'WTF( s1.shape:   {s1.shape}   )'
-/print f'WTF( s0.cat(s1): {s0.cat(s1)} )'
-
-
-# vav = s0.cat(*(gw.do_move(a) for a in actions))
-
-# /gw.reset
-
-# /print er
-# /print hr
-# /print shr
-
-# /print f's0.shape:  {s0.shape}'
-# /print f'vav.shape: {vav.shape}'
-
-#from mytf.grid_world.agent import shortest_path_slice
-#sps = shortest_path_slice( shr.encode() )
-#/print sps
