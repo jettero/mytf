@@ -1,7 +1,9 @@
 # coding: utf-8
 
 import sys, shutil, argparse
+from collections import namedtuple
 import numpy as np
+
 
 class NumpyTuple(tuple):
     nb_depth = None
@@ -12,19 +14,19 @@ class NumpyTuple(tuple):
     def __init__(self, *a, nb_depth=None):
         for v in a:
             if not isinstance(v, np.ndarray):
-                raise TypeError('NumpyTuple only works with np.ndarray')
+                raise TypeError("NumpyTuple only works with np.ndarray")
         self.nb_depth = self.depth if nb_depth is None else nb_depth
 
     @property
     def shape(self):
-        return tuple( x.shape for x in self )
+        return tuple(x.shape for x in self)
 
     def cat(self, *x):
-        items = [ y.promote() for y in (self, *x) ]
-        return self.__class__(*(
-            np.concatenate([x[i] for x in items])
-            for i in range(len(self))
-        ), nb_depth=self.nb_depth)
+        items = [y.promote() for y in (self, *x)]
+        return self.__class__(
+            *(np.concatenate([x[i] for x in items]) for i in range(len(self))),
+            nb_depth=self.nb_depth,
+        )
 
     @property
     def depth(self):
@@ -43,23 +45,39 @@ class NumpyTuple(tuple):
         """
         ret = self
         while ret.depth <= self.nb_depth:
-            ret = self.__class__(*(x.reshape((1,*x.shape)) for x in ret), nb_depth=self.nb_depth)
+            ret = self.__class__(
+                *(x.reshape((1, *x.shape)) for x in ret), nb_depth=self.nb_depth
+            )
         return ret
 
     def slice(self, x):
         return self.__class__(*(y[x] for y in self))
 
+
+class TwoSides(namedtuple("TwoSides", ["lhs", "rhs"]), NumpyTuple):
+    @property
+    def lob(self):
+        """left of bang [on a timeline]"""
+        return self.lhs
+
+    @property
+    def rob(self):
+        """right of bang [on a timeline]"""
+        return self.rhs
+
+
 def bnd(lb, val, ub, swap=True):
-    ''' bnd(lb,val,ub)
-        if val is none, bnd() returns a lambda x: bnd(lb,x,ub)
-        if lb is greater than ub and swap=True (default),
-            lb and ub are swapped
-    '''
+    """bnd(lb,val,ub)
+    if val is none, bnd() returns a lambda x: bnd(lb,x,ub)
+    if lb is greater than ub and swap=True (default),
+        lb and ub are swapped
+    """
     if swap and lb > ub:
-        lb,ub = ub,lb
+        lb, ub = ub, lb
     if val is None:
         return lambda x: min(ub, max(lb, x))
     return min(ub, max(lb, val))
+
 
 class Bound:
     def __init__(self, lb, ub, swap=True):
@@ -68,44 +86,52 @@ class Bound:
     def __call__(self, x):
         return self._cb(x)
 
+
 def dmax(o, γ=0.97, β=1.0):
-    r = set([ o.argmax() ])
+    r = set([o.argmax()])
     m = o.max()
     if 0.0 <= β < 1.0:
         l = γ * m
-        d = (m-l)
+        d = m - l
         l += d * β
     else:
         l = m
-    for i,v in enumerate(o):
+    for i, v in enumerate(o):
         if v >= l:
             r.add(i)
     return tuple(r)
 
-def fnameify(fname, ext='.h5'):
-    if not ext.startswith('.'):
-        ext = '.' + ext
-    if '/' not in fname:
-        fname = f'save/{fname}'
+
+def fnameify(fname, ext=".h5"):
+    if not ext.startswith("."):
+        ext = "." + ext
+    if "/" not in fname:
+        fname = f"save/{fname}"
     if not fname.endswith(ext):
         fname += ext
     return fname
 
+
 def yes_no_threshold(e=0.5):
-    if e <= 0: return False
-    if e >= 1: return True
-    return bool( e >= np.random.uniform(0,1) )
+    if e <= 0:
+        return False
+    if e >= 1:
+        return True
+    return bool(e >= np.random.uniform(0, 1))
+
 
 def iterate_anything(*x):
     for i in x:
-        if isinstance(i, (list,tuple)):
+        if isinstance(i, (list, tuple)):
             yield from iterate_anything(*i)
         else:
             yield i
 
+
 def generate_forever(*a):
     while True:
         yield from a
+
 
 def ema(*x, a=0.5):
     if not x:
@@ -121,26 +147,37 @@ def ema(*x, a=0.5):
             continue
         if i is None:
             continue
-        r = a*i + (1-a)*r
+        r = a * i + (1 - a) * r
     return r
 
-def format_output_vector(vec, action=None, γ=None, β=None,
-        f='5.2f', A=tuple('nsew') + tuple('NE SE NW SW'.split())):
+
+def format_output_vector(
+    vec,
+    action=None,
+    γ=None,
+    β=None,
+    f="5.2f",
+    A=tuple("nsew") + tuple("NE SE NW SW".split()),
+):
     dm = dmax(vec, γ=γ, β=β)
+
     def generate_items():
-        for an,x in enumerate(vec):
+        for an, x in enumerate(vec):
             aw = A[an]
-            xf = f'{x:{f}}'
-            fs = f'{aw}={xf}'
-            c = (93,99) if an in dm else (234,238)
-            c = c[ 1 if an == action else 0 ]
-            yield f'\x1b[38;5;{c}m{fs}\x1b[m'
-    return ' '.join(generate_items())
+            xf = f"{x:{f}}"
+            fs = f"{aw}={xf}"
+            c = (93, 99) if an in dm else (234, 238)
+            c = c[1 if an == action else 0]
+            yield f"\x1b[38;5;{c}m{fs}\x1b[m"
+
+    return " ".join(generate_items())
+
 
 def write_now(*txt):
     for t in txt:
         sys.stdout.write(t)
     sys.stdout.flush()
 
-def terminal_size(fallback=(80,24)):
+
+def terminal_size(fallback=(80, 24)):
     return shutil.get_terminal_size(fallback=fallback)

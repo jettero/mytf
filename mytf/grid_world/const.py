@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-Actions = tuple('nsew') + tuple('NE SE NW SW'.split())
+Actions = tuple("nsew") + tuple("NE SE NW SW".split())
 
 VOID = 0
 WALL = 1

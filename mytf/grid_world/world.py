@@ -11,16 +11,20 @@ from .const import Actions
 from .util import ViewActionView
 from .util import ScrollHeadTrait, EncoderTrait, vectorize_action
 
+
 class Goal(Ubi):
-    a = '*'
+    a = "*"
+
 
 class Turtle(Human):
-    a = '☺'
+    a = "☺"
+
     def __init__(self):
-        super().__init__('Grid World Turtle', 'Turtle')
+        super().__init__("Grid World Turtle", "Turtle")
+
 
 class GridWorld(EncoderTrait, ScrollHeadTrait):
-    largest_size = [0,0]
+    largest_size = [0, 0]
 
     def __init__(self, room=None, maxdist=3):
         self.maxdist = maxdist
@@ -87,6 +91,7 @@ class GridWorld(EncoderTrait, ScrollHeadTrait):
     @property
     def s(self):
         return self.pos(self.T)
+
     @s.setter
     def s(self, p):
         self.put(self.T, p)
@@ -94,6 +99,7 @@ class GridWorld(EncoderTrait, ScrollHeadTrait):
     @property
     def g(self):
         return self.pos(self.G)
+
     @g.setter
     def g(self, p):
         self.put(self.G, p)
@@ -102,11 +108,11 @@ class GridWorld(EncoderTrait, ScrollHeadTrait):
         return str(self.R)
 
     def __repr__(self):
-        return f'GridWorld[{self.B.XX} × {self.B.YY}: s={self.s} g={self.g}]'
+        return f"GridWorld[{self.B.XX} × {self.B.YY}: s={self.s} g={self.g}]"
 
     @property
     def view(self):
-        return self.R.maxdist_submap( self.T, maxdist=self.maxdist )
+        return self.R.maxdist_submap(self.T, maxdist=self.maxdist)
 
     def dist2goal(self, pos=None, goal_pos=None):
         return self.distnorm2goal(pos=pos, goal_pos=goal_pos)[-1]
@@ -123,9 +129,9 @@ class GridWorld(EncoderTrait, ScrollHeadTrait):
             d = np.array(goal_pos) - np.array(pos)
             n = np.linalg.norm(d)
         except TypeError:
-            return (0,0), 0.000001
+            return (0, 0), 0.000001
         if n != 0:
-            return d/n, n
+            return d / n, n
         return d, 0.0
 
     def do_move(self, a):
@@ -146,51 +152,55 @@ class GridWorld(EncoderTrait, ScrollHeadTrait):
         return ViewActionView(lob, act, rob)
 
 
-def EasyRoom(x=5,y=5, s=None, g=None):
+def EasyRoom(x=5, y=5, s=None, g=None):
     room = Room(x, y)
     gw = GridWorld(room=room)
     if s is None:
-        s = (1,2)
+        s = (1, 2)
     if g is None:
-        g = (x, y-1)
+        g = (x, y - 1)
     gw.s0 = s
     gw.g0 = g
     gw.reset()
     return gw
 
+
 def HardRoom():
-    r = Room(7,3)
-    r[5,4] = Room(2,5)
+    r = Room(7, 3)
+    r[5, 4] = Room(2, 5)
     r.cellify_partitions()
     gw = GridWorld(r)
-    gw.s0 = gw.s = 2,3
-    gw.g0 = gw.g = 7,9
+    gw.s0 = gw.s = 2, 3
+    gw.g0 = gw.g = 7, 9
     gw.reset()
     return gw
 
+
 def SuperHardRoom():
-    room = Room(5,5)
-    room[10,8] = Room(5,5)
-    for i in range(6,13):
-        room[i,4] = Wall()
-        room[i,5] = Cell()
-        room[i,6] = Wall()
-    for i in range(6,9):
-        room[11,i] = Wall()
-        room[12,i] = Cell()
-        room[13,i] = Wall()
-    room[13,4] = Wall()
-    room[13,5] = Wall()
+    room = Room(5, 5)
+    room[10, 8] = Room(5, 5)
+    for i in range(6, 13):
+        room[i, 4] = Wall()
+        room[i, 5] = Cell()
+        room[i, 6] = Wall()
+    for i in range(6, 9):
+        room[11, i] = Wall()
+        room[12, i] = Cell()
+        room[13, i] = Wall()
+    room[13, 4] = Wall()
+    room[13, 5] = Wall()
     gw = GridWorld(room=room)
-    gw.s0 = (2,2)
-    gw.g0 = (11,12)
+    gw.s0 = (2, 2)
+    gw.g0 = (11, 12)
     gw.reset()
     return gw
+
 
 def run_check():
     gw = SuperHardRoom()
     print(repr(gw))
     print(gw)
 
-if __name__ == '__main__':
-    run_check();
+
+if __name__ == "__main__":
+    run_check()

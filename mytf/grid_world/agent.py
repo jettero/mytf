@@ -5,30 +5,31 @@ import numpy as np
 from space.map import Cell
 from .const import CELL, GOAL, Actions
 
+
 def adjacent_cells(cells, ii, threshold=0.3):
     to_check = (
-        (ii[0]+0, ii[1]-1),
-        (ii[0]-0, ii[1]+1),
-        (ii[0]+1, ii[1]-0),
-        (ii[0]-1, ii[1]+0),
-
-        (ii[0]+1, ii[1]+1),
-        (ii[0]-1, ii[1]-1),
-        (ii[0]+1, ii[1]-1),
-        (ii[0]-1, ii[1]+1),
+        (ii[0] + 0, ii[1] - 1),
+        (ii[0] - 0, ii[1] + 1),
+        (ii[0] + 1, ii[1] - 0),
+        (ii[0] - 1, ii[1] + 0),
+        (ii[0] + 1, ii[1] + 1),
+        (ii[0] - 1, ii[1] - 1),
+        (ii[0] + 1, ii[1] - 1),
+        (ii[0] - 1, ii[1] + 1),
     )
 
     for loc in to_check:
         if cells[loc] >= threshold:
             yield loc
 
+
 def shortest_path_slice(one_hot_map, threshold=0.3, maxdist=None, normalize=True):
-    mg = np.argmax(one_hot_map[GOAL]) # the index in the flattened array
+    mg = np.argmax(one_hot_map[GOAL])  # the index in the flattened array
     ss = one_hot_map[GOAL].shape
     ii = np.unravel_index(mg, ss)
 
     if one_hot_map[GOAL][ii] >= threshold:
-        ret = np.zeros( ss )
+        ret = np.zeros(ss)
         ret[ii] = 1
         x = 1
         did_something = True
@@ -48,8 +49,9 @@ def shortest_path_slice(one_hot_map, threshold=0.3, maxdist=None, normalize=True
         mv = np.max(ret)
         ret = mv - ret
         ret *= one_hot_map[CELL]
-        ret /= (mv -1)
+        ret /= mv - 1
         return ret
+
 
 class Agent:
     def __init__(self, gw):
@@ -61,10 +63,10 @@ class Agent:
             p = self.gw.s
         score = 0
         winner = None
-        for dir,cell in self.gw.R[p].iter_neighbors(dirs=Actions):
-            cx,cy = cell.pos
-            if self.sps[cy,cx] > score:
-                score = self.sps[cy,cx]
+        for dir, cell in self.gw.R[p].iter_neighbors(dirs=Actions):
+            cx, cy = cell.pos
+            if self.sps[cy, cx] > score:
+                score = self.sps[cy, cx]
                 winner = dir
         return winner
 
@@ -88,7 +90,7 @@ class Agent:
         t = self.gw.tview
         g = np.zeros(t[GOAL].shape, dtype=np.float32)
         m = np.max(self.sps)
-        for vpos, apos in [(p,x.pos) for p,x in v if isinstance(x, Cell)]:
+        for vpos, apos in [(p, x.pos) for p, x in v if isinstance(x, Cell)]:
             g[vpos] = self.sps[apos]
         if goal_only:
             return g

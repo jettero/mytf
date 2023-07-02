@@ -16,8 +16,8 @@ agent = Agent(gw)
 
 x0 = gw.tview
 y0 = agent.one_hot_shortrange_goal()
-xs = (1,*x0.shape)
-ys = (1,*y0.shape)
+xs = (1, *x0.shape)
+ys = (1, *y0.shape)
 x_data = x0.reshape(xs)
 y_true = y0.reshape(ys)
 
@@ -27,12 +27,11 @@ for a in actions:
     x_data = np.concatenate((x_data, gw.tview.reshape(xs)))
     y_true = np.concatenate((y_true, agent.one_hot_shortrange_goal().reshape(ys)))
 
-x_data = tf.transpose(x_data, perm=[0, 2,3,1])
-y_true = tf.transpose(y_true, perm=[0, 2,3,1])
+x_data = tf.transpose(x_data, perm=[0, 2, 3, 1])
+y_true = tf.transpose(y_true, perm=[0, 2, 3, 1])
 
-print(f'x_data = {x_7.shape}')
-print(f'y_true = {y_7.shape}')
-
+print(f"x_data = {x_7.shape}")
+print(f"y_true = {y_7.shape}")
 
 
 # lob = tf.keras.layers.Input(shape=x_7.shape[1:], name='left of bang')

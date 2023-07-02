@@ -15,7 +15,7 @@ repos:
   rev: pylint-2.4.2
   hooks:
   - id: pylint
-    files: 'space/'
+    files: '/mytf'
 - repo: https://github.com/psf/black
   rev: 19.10b0
   hooks:
