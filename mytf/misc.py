@@ -91,6 +91,7 @@ def ema(*x, a=0.5):
 
 
 def features_last(x):
+    """ move features from -3 to the end """
     s = x.shape
     p = list(range(len(s)))
     p.append(p.pop(-3))
@@ -101,6 +102,7 @@ def features_last(x):
 
 
 def features_first(x):
+    """ move features from -1 to -3 """
     s = x.shape
     p = list(range(len(s)))
     p.insert(-2, p.pop(-1))

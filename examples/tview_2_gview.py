@@ -9,6 +9,12 @@ import numpy as np
 from mytf.grid_world.agent import Agent
 from mytf.grid_world.util import decode_view
 from mytf.strings import side_by_side
+from mytf.misc import features_last, features_first
+
+try:
+    IPYTHON = get_ipython()
+except:
+    IPYTHON = False
 
 NUM_CPU = multiprocessing.cpu_count()
 gw = mytf.grid_world.SuperHardRoom()
@@ -27,8 +33,8 @@ for a in actions:
     x_data = np.concatenate((x_data, gw.tview.reshape(xs)))
     y_true = np.concatenate((y_true, agent.one_hot_shortrange_goal().reshape(ys)))
 
-x_data = tf.transpose(x_data, perm=[0, 2, 3, 1])
-y_true = tf.transpose(y_true, perm=[0, 2, 3, 1])
+x_data = features_last(x_data)
+y_true = features_last(y_true)
 
 print(f"x_data = {x_data.shape}")
 print(f"y_true = {y_true.shape}")
@@ -59,14 +65,25 @@ y_pred, = SenseGoal(x_data)
 print(f'y_pred: {y_pred.shape}')
 
 def do_lap(epochs=100, workers=NUM_CPU):
+    global y_pred, ypff
     SenseGoal.fit(x=x_data, y=y_true, epochs=epochs, verbose=True, use_multiprocessing=True, workers=workers)
     y_pred, = SenseGoal(x_data)
     for t,p in zip(y_true, y_pred):
-        d1 = decode_view(y, with_turtle=True)
-        d2 = decode_view(yp, with_turtle=True)
-        print( side_by_side(str(d1), str(d2)) )
+        dt = decode_view(features_first(t), with_turtle=True)
+        dp = decode_view(features_first(p), with_turtle=True)
+        print( side_by_side(str(dt), str(dp)) )
+    if IPYTHON:
+        ypff = features_first(y_pred)
 
-if __name__ == '__main__':
-    do_lap()
+if __name__ == '__main__' and not IPYTHON:
+    while True:
+        try:
+            epochs = int(input('epochs (0: exit): '))
+            if epochs < 1:
+                break
+        except:
+            continue
+        do_lap(epochs=epochs)
 else:
-    print("use /do_lap to run the network 100 times and print things")
+    do_lap(epochs=5)
+    print("use /do_lap [epochs=100] to run the network, populate ypff, and print things")
