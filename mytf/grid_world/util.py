@@ -8,10 +8,10 @@ from space.map import Cell, Wall, Map
 from ..util.misc import terminal_size, write_now, NumpyTuple
 from .const import VOID, WALL, CELL, GOAL, TURTLE, MAX_TYPE, Actions
 
-class ViewView(namedtuple('ViewView', ['v1', 'v2']), NumpyTuple):
+class ViewView(NumpyTuple, namedtuple('ViewView', ['v1', 'v2'])):
     pass
 
-class ViewActionView(namedtuple('ViewActionView', ['lob', 'act', 'rob']), NumpyTuple):
+class ViewActionView(NumpyTuple, namedtuple('ViewActionView', ['lob', 'act', 'rob'])):
     pass
 
 def encode_view(map, turtle, goal, one_hot=True, min_size=None, pad=None):
