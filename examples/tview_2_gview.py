@@ -11,6 +11,7 @@ from mytf.grid_world.agent import Agent
 from mytf.grid_world.util import decode_view
 from mytf.strings import side_by_side
 from mytf.misc import features_last, features_first
+from mytf.util import NumpyTuple
 
 try:
     IPYTHON = get_ipython()
@@ -18,30 +19,48 @@ except:
     IPYTHON = False
 
 NUM_CPU = multiprocessing.cpu_count()
-gw = mytf.grid_world.SuperHardRoom()
-agent = Agent(gw)
 
-x0 = gw.tview
-y0 = agent.one_hot_shortrange_goal()
-xs = (1, *x0.shape)
-ys = (1, *y0.shape)
-x_data = x0.reshape(xs)
-y_true = y0.reshape(ys)
+def compute_xy(*worlds):
+    for gw in worlds:
+        agent = Agent(gw)
 
-actions = agent.shortest_path_to_goal()
-for a in actions:
-    agent.do_move(a)
-    x_data = np.concatenate((x_data, gw.tview.reshape(xs)))
-    y_true = np.concatenate((y_true, agent.one_hot_shortrange_goal().reshape(ys)))
+        x0 = gw.tview
+        y0 = agent.one_hot_shortrange_goal()
+        xs = (1, *x0.shape)
+        ys = (1, *y0.shape)
+        x_data = x0.reshape(xs)
+        y_true = y0.reshape(ys)
 
-x_data = features_last(x_data)
-y_true = y_true[:, GOAL]
+        actions = agent.shortest_path_to_goal()
+        for a in actions:
+            agent.do_move(a)
+            x_data = np.concatenate((x_data, gw.tview.reshape(xs)))
+            y_true = np.concatenate((y_true, agent.one_hot_shortrange_goal().reshape(ys)))
 
-print(f"x_data = {x_data.shape}")
-print(f"y_true = {y_true.shape}")
+        x_data = features_last(x_data)
+        y_true = y_true[:, GOAL]
+
+        yield NumpyTuple(x_data, y_true, nb_depth=3)
+
+room_gen = compute_xy(
+    mytf.grid_world.EasyRoom(),
+    mytf.grid_world.HardRoom(),
+    mytf.grid_world.SuperHardRoom(),
+)
+
+data = next(room_gen)
+for d in room_gen:
+    data = data.cat(d)
+x_data, y_true = data
+
+print(f'x_data: {x_data.shape}')
+print(f'y_true: {y_true.shape}')
 
 N = np.prod(x_data.shape[1:])
 M = np.prod(y_true.shape[1:])
+
+print(f'\nN={N}; M={M}')
+
 I = tf.keras.layers.Input(shape=x_data.shape[1:], name="left of bang")
 
 o = I
@@ -84,6 +103,9 @@ if __name__ == "__main__" and not IPYTHON:
             epochs = int(input("epochs (0: exit): "))
             if epochs < 1:
                 break
+        except (KeyboardInterrupt, EOFError):
+            print('\n.oO( ^C/^D counts as 0 )')
+            break
         except:
             continue
         do_lap(epochs=epochs)
