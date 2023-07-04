@@ -42,16 +42,18 @@ def compute_xy(*worlds):
 
         yield NumpyTuple(x_data, y_true, nb_depth=3)
 
-room_gen = compute_xy(
+data = list(compute_xy(
     mytf.grid_world.EasyRoom(),
     mytf.grid_world.HardRoom(),
     mytf.grid_world.SuperHardRoom(),
-)
+))
 
-data = next(room_gen)
-for d in room_gen:
-    data = data.cat(d)
-x_data, y_true = data
+max_group_size = max( x.shape[0] for x,y in data )
+
+print(f'max_group_size = {max_group_size}')
+
+import sys
+sys.exit(0)
 
 print(f'x_data: {x_data.shape}')
 print(f'y_true: {y_true.shape}')
